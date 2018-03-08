@@ -5,6 +5,8 @@ var path = require('path');
 var server = require('socket.io');
 var pty = require('pty.js');
 var fs = require('fs');
+var Docker = require('dockerode');
+var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 var opts = require('optimist')
     .options({
@@ -75,7 +77,7 @@ process.on('uncaughtException', function(e) {
 var httpserv;
 
 var app = express();
-app.get('/wetty/ssh/:user', function(req, res) {
+app.get('/wetty/ssh/:host', function(req, res) {
     res.sendfile(__dirname + '/public/wetty/index.html');
 });
 app.use('/', express.static(path.join(__dirname, 'public')));
@@ -95,25 +97,38 @@ io.on('connection', function(socket){
     var sshuser = '';
     var request = socket.request;
     console.log((new Date()) + ' Connection accepted.');
+// this is now the host 
     if (match = request.headers.referer.match('/wetty/ssh/.+$')) {
-        sshuser = match[0].replace('/wetty/ssh/', '') + '@';
-    } else if (globalsshuser) {
-        sshuser = globalsshuser + '@';
+        sshhost = match[0].replace('/wetty/ssh/', '') + '@';
+    } else {
+	sshhost = "localhost";
     }
+//else if (globalsshuser) {
+//        sshuser = globalsshuser + '@';
+//   }
 
     var term;
-    if (process.getuid() == 0) {
+    if (sshhost == "localhost") {
         term = pty.spawn('/usr/bin/env', ['login'], {
             name: 'xterm-256color',
             cols: 80,
             rows: 30
         });
     } else {
-        term = pty.spawn('ssh', [sshuser + sshhost, '-p', sshport, '-o', 'PreferredAuthentications=' + sshauth], {
-            name: 'xterm-256color',
-            cols: 80,
-            rows: 30
-        });
+//first see if the hostname exists as a docker container, if not then use ssh-remote script to call it prompting for a username
+	var container = docker.getContainer(sshhost);  
+	if( container ) {
+		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
+		    name: 'xterm-256color',
+		    cols: 80,
+		    rows: 30
+		});
+	} else {
+	term = pty.spawn('ssh-remote', [sshhost], {
+	    name: 'xterm-256color',
+	    cols: 80,
+	    rows: 30
+	});
     }
     console.log((new Date()) + " PID=" + term.pid + " STARTED on behalf of user=" + sshuser)
     term.on('data', function(data) {
