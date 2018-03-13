@@ -56,7 +56,7 @@ if (opts.sshhost) {
 }
 
 if (opts.sshauth) {
-	sshauth = opts.sshauth
+	sshauth = opts.sshauth;
 }
 
 if (opts.sshuser) {
@@ -135,7 +135,7 @@ io.on('connection', function(socket){
         socket.emit('output', data);
     });
     term.on('exit', function(code) {
-        console.log((new Date()) + " PID=" + term.pid + " ENDED")
+        console.log((new Date()) + " PID=" + term.pid + " ENDED");
     });
     socket.on('resize', function(data) {
         term.resize(data.col, data.row);
@@ -146,4 +146,5 @@ io.on('connection', function(socket){
     socket.on('disconnect', function() {
         term.end();
     });
+    }	    
 });
