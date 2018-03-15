@@ -119,22 +119,28 @@ io.on('connection', function(socket){
         });
     } else {
 //first see if the hostname exists as a docker container, if not then use ssh-remote script to call it prompting for a username
-	var container = docker.getContainer(sshhost); 
+	var container = docker.getContainer(sshhost);
+	container.inspect(function (err, data) {
+	
 // We need to see if container exists here
-	if( container ) {
+	if( typeof(data)!=undefined ) {
+	
+		console.log("Found container:" + sshhost);
+		
 		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
 		    name: 'xterm-256color',
 		    cols: 80,
 		    rows: 30
 		});
 	} else {
-	term = pty.spawn('ssh-remote', [sshhost], {
+	term = pty.spawn('./ssh-remote', [sshhost], {
 	    name: 'xterm-256color',
 	    cols: 80,
 	    rows: 30
 	});
     }
-    }
+    });
+}
     console.log((new Date()) + " PID=" + term.pid + " STARTED on behalf of user=" + sshuser)
     term.on('data', function(data) {
         socket.emit('output', data);
