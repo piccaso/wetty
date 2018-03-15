@@ -103,6 +103,8 @@ io.on('connection', function(socket){
     } else {
 	sshhost = "localhost";
     }
+
+    console.log('Host is ' + sshhost); 
 //else if (globalsshuser) {
 //        sshuser = globalsshuser + '@';
 //   }
