@@ -135,7 +135,8 @@ io.on('connection', function(socket){
 		});
 	} else {
 
-		console.log("No container found, trying ssh:" + sshhost); 
+		console.log("No container found, trying ssh:" + sshhost);
+		console.log("Error:" + err);
 	term = pty.spawn('./ssh-remote.sh', [sshhost], {
 	    name: 'xterm-256color',
 	    cols: 80,
