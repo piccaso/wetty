@@ -97,14 +97,15 @@ io.on('connection', function(socket){
     var sshuser = '';
     var request = socket.request;
     console.log((new Date()) + ' Connection accepted.');
-// this is now the host 
-    if (match = request.headers.referer.match('/.+$')) {
-        sshhost = match[0].replace('/', '');
+// this is now the host
+    console.log('Request from: ' + request.headers.referer);
+    if (match = request.headers.referer.match('://.+/(.+$)')) {
+        sshhost = match[1];
     } else {
 	sshhost = "localhost";
     }
 
-    console.log('Host is ' + sshhost); 
+    console.log('Host is: ' + sshhost); 
 //else if (globalsshuser) {
 //        sshuser = globalsshuser + '@';
 //   }
@@ -133,6 +134,7 @@ io.on('connection', function(socket){
 	    rows: 30
 	});
     }
+    }
     console.log((new Date()) + " PID=" + term.pid + " STARTED on behalf of user=" + sshuser)
     term.on('data', function(data) {
         socket.emit('output', data);
@@ -149,5 +151,4 @@ io.on('connection', function(socket){
     socket.on('disconnect', function() {
         term.end();
     });
-    }	    
 });
