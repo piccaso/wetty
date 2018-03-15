@@ -77,7 +77,7 @@ process.on('uncaughtException', function(e) {
 var httpserv;
 
 var app = express();
-app.get('/wetty/ssh/:host', function(req, res) {
+app.get('/:host', function(req, res) {
     res.sendfile(__dirname + '/public/wetty/index.html');
 });
 app.use('/', express.static(path.join(__dirname, 'public')));
@@ -98,8 +98,8 @@ io.on('connection', function(socket){
     var request = socket.request;
     console.log((new Date()) + ' Connection accepted.');
 // this is now the host 
-    if (match = request.headers.referer.match('/wetty/ssh/.+$')) {
-        sshhost = match[0].replace('/wetty/ssh/', '') + '@';
+    if (match = request.headers.referer.match('/.+$')) {
+        sshhost = match[0].replace('/', '');
     } else {
 	sshhost = "localhost";
     }
@@ -116,7 +116,8 @@ io.on('connection', function(socket){
         });
     } else {
 //first see if the hostname exists as a docker container, if not then use ssh-remote script to call it prompting for a username
-	var container = docker.getContainer(sshhost);  
+	var container = docker.getContainer(sshhost); 
+// We need to see if container exists here
 	if( container ) {
 		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
 		    name: 'xterm-256color',
