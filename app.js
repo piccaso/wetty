@@ -123,9 +123,10 @@ io.on('connection', function(socket){
 	container.inspect(function (err, data) {
 	
 // We need to see if container exists here
-	if( typeof(data)!=undefined ) {
+	if( data ) {
 	
 		console.log("Found container:" + sshhost);
+		console.log("Data:" + data);
 		
 		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
 		    name: 'xterm-256color',
@@ -133,7 +134,9 @@ io.on('connection', function(socket){
 		    rows: 30
 		});
 	} else {
-	term = pty.spawn('./ssh-remote', [sshhost], {
+
+		console.log("No container found, trying ssh:" + sshhost); 
+	term = pty.spawn('./ssh-remote.sh', [sshhost], {
 	    name: 'xterm-256color',
 	    cols: 80,
 	    rows: 30
