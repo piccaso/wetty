@@ -106,46 +106,64 @@ io.on('connection', function(socket){
     }
 
     console.log('Host is: ' + sshhost); 
-//else if (globalsshuser) {
-//        sshuser = globalsshuser + '@';
-//   }
 
     var term;
-    if (sshhost == "localhost") {
+    if (sshhost != "localhost") {
+	var container = docker.getContainer(sshhost);
+	container.inspect(term = function (err, data) {
+	
+	if( data ) {
+	
+		console.log("Found container:" + sshhost);
+		
+                spawnTerm(sshhost,"container",socket); 
+		
+	} else {
+
+		console.log("No container found, trying ssh:" + sshhost);
+
+                spawnTerm(sshhost,"ssh",socket); 
+	}
+    });
+   } else {
+  
+     spawnTerm(sshhost,"local",socket);
+   }
+});
+
+function spawnTerm(sshhost, mode, socket) {
+
+  var term;
+  
+  switch( mode ){
+     case "container":
         term = pty.spawn('/usr/bin/env', ['login'], {
             name: 'xterm-256color',
             cols: 80,
             rows: 30
         });
-    } else {
-//first see if the hostname exists as a docker container, if not then use ssh-remote script to call it prompting for a username
-	var container = docker.getContainer(sshhost);
-	container.inspect(function (err, data) {
-	
-// We need to see if container exists here
-	if( data ) {
-	
-		console.log("Found container:" + sshhost);
-		console.log("Data:" + data);
-		
-		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
-		    name: 'xterm-256color',
-		    cols: 80,
-		    rows: 30
-		});
-	} else {
-
-		console.log("No container found, trying ssh:" + sshhost);
-		console.log("Error:" + err);
-	term = pty.spawn('./ssh-remote.sh', [sshhost], {
-	    name: 'xterm-256color',
-	    cols: 80,
-	    rows: 30
-	});
-    }
+	break;
+     case "ssh":
+        term = pty.spawn('/usr/bin/env', ['login'], {
+            name: 'xterm-256color',
+            cols: 80,
+            rows: 30
+        });
+	break;
+     default:
+        term = pty.spawn('/usr/bin/env', ['login'], {
+            name: 'xterm-256color',
+            cols: 80,
+            rows: 30
+        });
+	break;
+   }
+//		term = pty.spawn('docker exec -it', [sshhost, '/bin/bash'], {
+//		term = pty.spawn('/home/dev/wetty/ssh-remote.sh', [sshhost], {
+    console.log((new Date()) + " PID=" + term.pid );
+    term.on('error', function(data) {
+	console.log("Error:" + data);
     });
-}
-    console.log((new Date()) + " PID=" + term.pid + " STARTED on behalf of user=" + sshuser)
     term.on('data', function(data) {
         socket.emit('output', data);
     });
@@ -161,4 +179,4 @@ io.on('connection', function(socket){
     socket.on('disconnect', function() {
         term.end();
     });
-});
+}
