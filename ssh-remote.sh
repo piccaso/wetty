@@ -2,4 +2,4 @@
 
 read -p 'Please enter your username:' username
 
-ssh username@$1
+ssh $username@$1

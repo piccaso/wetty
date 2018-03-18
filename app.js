@@ -137,14 +137,16 @@ function spawnTerm(sshhost, mode, socket) {
   
   switch( mode ){
      case "container":
-        term = pty.spawn('/usr/bin/env', ['login'], {
+	term = pty.spawn('/usr/bin/env', ['docker', 'exec', '-it','-e', 'TERM=xterm-256color', sshhost, '/bin/bash'], {
+       // term = pty.spawn('/usr/bin/env', ['login'], {
             name: 'xterm-256color',
             cols: 80,
             rows: 30
         });
 	break;
      case "ssh":
-        term = pty.spawn('/usr/bin/env', ['login'], {
+	term = pty.spawn('./ssh-remote.sh', [sshhost], {
+       // term = pty.spawn('/usr/bin/env', ['login'], {
             name: 'xterm-256color',
             cols: 80,
             rows: 30
